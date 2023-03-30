@@ -1,0 +1,245 @@
+options {
+  	JAVA_UNICODE_ESCAPE = false;
+}
+
+PARSER_BEGIN(MiniJavaParser)
+public class MiniJavaParser {}
+PARSER_END(MiniJavaParser)
+
+
+// Insert a specification of a lexical analysis here. 
+
+
+// The following is a simple grammar that will allow you
+// to test the generated lexer.
+
+SKIP: { " " | "\t" | "\n" | "\r" }
+
+/* RESERVED WORDS AND LITERALS ================== */
+TOKEN : {
+ 	< CLASS: "class" >
+| 	< PUBLIC: "public" >
+| 	< STATIC: "static" >
+| 	< VOID: "void" >
+| 	< MAIN: "main" >
+| 	< STRING: "String" >
+| 	< INT: "int" >
+| 	< BOOLEAN: "boolean" >
+|	< TRUE: "true" >
+| 	< FALSE: "false" >
+| 	< EXTENDS: "extends" >
+| 	< RETURN: "return" >
+| 	< NEW: "new" >
+| 	< THIS: "this" >
+| 	< SYSTEM_OUT_PRINTLN: "System.out.println" >
+| 	< IF: "if" >
+| 	< ELSE: "else" >
+| 	< WHILE: "while" >
+| 	< LENGTH: "length" >
+}
+
+/* IDENTIFIERS ================================== */
+TOKEN: {
+	< IDENTIFIER: (["a"-"z","A"-"Z"]) + (["a"-"z","A"-"Z","0"-"9","_"])* >
+| 	< INTERGER_LITERAL: (["0"-"9"]) >
+}
+
+/* SEPARATORS =================================== */
+TOKEN: {
+ 	< LPAREN: "(" >
+| 	< RPAREN: ")" >
+| 	< LBRACE: "{" >
+| 	< RBRACE: "}" >
+| 	< LBRACKET: "[" >
+| 	< RBRACKET: "]" >
+| 	< SEMICOLON: ";" >
+| 	< COMMA: "," >
+| 	< DOT: "." >
+}
+
+/* OPERATORS ==================================== */
+TOKEN: {
+ 	< ASSIGN: "=" >
+| 	< PLUS: "+" >
+| 	< MINUS: "-" >
+| 	< TIMES: "*" >
+| 	< SPLIT: "/" >
+| 	< AND: "&&" >
+| 	< OR: "||" >
+| 	< NOT: "!" >
+| 	< LT: "<" >
+| 	< BT: ">" >
+| 	< LTEQUAL: "<=" >
+| 	< BTEQUAL: ">=" >
+| 	< EQUAL: "==" >
+| 	< NOTEQUAL: "!=" >
+}
+
+/******************************************
+ * ---- LANGUAGE GRAMMAR STARTS HERE ---- *
+ ******************************************/
+void Program():
+{}
+{
+	MainClass() ( ClassDecl() )* <EOF>
+}
+
+void MainClass():
+{}
+{
+	<CLASS> <IDENTIFIER> <LBRACE> <PUBLIC> <STATIC> <VOID> <MAIN> <LPAREN> <STRING> <LBRACKET> <RBRACKET> <IDENTIFIER> <RPAREN> <LBRACE> Statement() <RBRACE> <RBRACE>
+}
+
+void ClassDecl():
+{}
+{
+ 	<CLASS> <IDENTIFIER> (<EXTENDS> <IDENTIFIER>)? <LBRACE> ( VarDecl() )* ( MethodDecl() )* <RBRACE>
+//| 	<CLASS> <IDENTIFIER> <EXTENDS> <IDENTIFIER> <LBRACE> ( VarDecl() )* ( MethodDecl() )* <RBRACE> 	
+}
+
+void VarDecl():
+{}
+{
+  	Type() <IDENTIFIER>  <SEMICOLON>
+}
+
+void MethodDecl():
+{}
+{
+	<PUBLIC> Type() <IDENTIFIER> <LPAREN> FormalList() <RPAREN> <LBRACE> ( VarDecl() )* ( Statement() )* <RETURN> Exp() <SEMICOLON> <RBRACE>
+}
+
+void FormalList():
+{}
+{
+	( Type() <IDENTIFIER> ( FormalRest() )* )?
+}
+
+void FormalRest():
+{}
+{
+	<COMMA> Type() <IDENTIFIER>
+}
+
+void Type():
+{}
+{
+	<INT> [ <LBRACKET> <RBRACKET> ]
+| 	<BOOLEAN>
+| 	<IDENTIFIER>
+}
+
+void Statement():
+{}
+{
+	<LBRACE> ( Statement() )* <RBRACE>
+| 	<IF> <LPAREN> Exp() <RPAREN> Statement() <ELSE> Statement()
+| 	<WHILE> <LPAREN> Exp() <RPAREN> Statement()
+| 	<SYSTEM_OUT_PRINTLN> <LPAREN> Exp() <RPAREN> <SEMICOLON>
+| 	<IDENTIFIER> [ <LBRACKET> Exp() <RBRACKET> ] <ASSIGN> Exp() <SEMICOLON>
+}
+
+// Error: Line 146, Column 1: Left recursion detected: "Exp... --> Exp..."
+// http://cs.gettysburg.edu/~tneller/cs374/hw3.html
+/*void Exp():
+{}
+{
+  	Exp() ( <PLUS> | <MINUS> | <TIMES> | <SPLIT> | <EQUAL> | <NOTEQUAL> | <AND> | <OR> | <LT> | <BT> | <LTEQUAL> | <BTEQUAL> ) Exp()
+| 	Exp() <LBRACKET> Exp() <RBRACKET>
+| 	Exp() <DOT> <LENGTH>
+| 	Exp() <DOT> <IDENTIFIER> <LPAREN> ExpList() <RPAREN>
+| 	<INTERGER_LITERAL>
+| 	<TRUE>
+| 	<FALSE>
+| 	<IDENTIFIER>
+| 	<THIS>
+| 	<NEW> <INT> <LBRACKET> Exp() <RBRACKET>
+| 	<NEW> <IDENTIFIER> <LPAREN> <RPAREN>
+| 	<NOT> Exp()
+| 	<LPAREN> Exp() <RPAREN>
+}*/
+
+// Precedence Hierarchy Process METHOD ==========
+void Exp():
+{}
+{
+	And()
+}
+
+void And():
+{}
+{
+	LessThan() ( <AND> LessThan() )* 
+}
+
+void LessThan():
+{}
+{
+	AdditiveExp() ( <LT> AdditiveExp() )?
+}  
+
+void AdditiveExp():
+{}
+{
+	Times() ( ( <PLUS> | <MINUS> ) Times() )*
+}
+
+void Times():
+{}
+{
+	PrefixExp() ( <TIMES> PrefixExp() )*
+}
+
+void PrefixExp():
+{}
+{
+	Not() | PostfixExp()
+}
+
+void Not():
+{}
+{
+	( <NOT> )+ PostfixExp()	  
+}
+
+void PostfixExp():
+{}
+{
+	PrimaryExp() ( <LBRACKET> Exp() <RBRACKET> | (<DOT>)+ ( <IDENTIFIER> <LPAREN> ExpList() <RPAREN> | <LENGTH>) )*
+}
+
+void PrimaryExp():
+{}
+{
+ 	<INTERGER_LITERAL>
+| 	<TRUE>
+| 	<FALSE>
+| 	<IDENTIFIER>
+| 	<THIS>
+| 	<LPAREN> Exp() <RPAREN>
+| 	<NEW> ( <INT> <LBRACKET> Exp() <RBRACKET> | <IDENTIFIER> <LPAREN> <RPAREN> )
+}
+// ==============================================
+
+void ExpList():
+{}
+{
+	( Exp() ( ExpRest() )* )?
+}
+
+void ExpRest():
+{}
+{
+	<COMMA> Exp()
+}
+
+
+
+
+
+
+
+
+
+
+

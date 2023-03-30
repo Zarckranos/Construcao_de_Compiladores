@@ -1,0 +1,33 @@
+// arquivo que contém a implementação do analisador léxico, que usa as regras definidas em MineJava.jj para analisar um arquivo de código fonte MiniJava.
+import java.io.*;
+/*
+Observe que esta classe usa uma interface MiniJavaTokens que define 
+constantes para cada tipo de token na linguagem MiniJava. Além disso, esta
+classe usa uma classe MiniJavaScanner gerada pelo JavaCC para fazer a análise
+léxica do código fonte. O método main() pode ser usado para testar o
+analisador léxico em um arquivo de código fonte.
+*/
+public class Lexer implements miniJavaTokens {
+    private java_cup.runtime.Scanner scanner;
+
+    public Lexer(Reader reader) {
+        scanner = new MiniJavaScanner(reader);
+    }
+
+    public Token next_token() {
+        Token token = null;
+        try {
+            token = (Token) scanner.next_token();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return token;
+    }
+
+    public static void main(String[] args) throws Exception {
+        Lexer lexer = new Lexer(new FileReader("source.minijava"));
+        for (Token token = lexer.next_token(); token.kind != EOF; token = lexer.next_token()) {
+            System.out.println(token);
+        }
+    }
+}

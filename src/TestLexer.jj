@@ -1,0 +1,29 @@
+// arquivo que contém um método main() usado para testar o analisador léxico em um arquivo de código fonte MiniJava.
+import java.io.*;
+/*
+Observe que esta classe cria uma instância da classe Lexer com um arquivo de
+código fonte "source.minijava" e, em seguida, usa um loop para chamar 
+repetidamente o método next_token() da classe Lexer e imprimir cada token na
+saída padrão. Certifique-se de que a interface MiniJavaTokens esteja incluída na
+classe TestLexer ou importada a partir de outro arquivo que a contenha.
+*/
+public class TestLexer {
+    public static void main(String[] args) {
+        try {
+            // Cria o analisador léxico para o arquivo de código fonte "teste.mj"
+            Lexer lexer = new Lexer(new FileInputStream("Factoria.java"));
+
+            // Lê e exibe todos os tokens do arquivo de código fonte
+            Token token;
+            do {
+                token = lexer.nextToken();
+                System.out.println(token.toString());
+            } while (token.getType() != MineJavaTokens.EOF);
+
+        } catch (FileNotFoundException e) {
+            System.err.println("Arquivo não encontrado: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Erro durante a análise léxica: " + e.getMessage());
+        }
+    }
+}
